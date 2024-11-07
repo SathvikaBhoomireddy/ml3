@@ -1,0 +1,32 @@
+# Import necessary libraries
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score
+
+# Load the Iris dataset
+iris = load_iris()
+X = iris.data  # Features
+y = iris.target  # Target labels
+
+# Split the dataset into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Initialize and train an SVM classifier with a linear kernel
+svm_classifier = SVC(kernel='linear', random_state=42)
+svm_classifier.fit(X_train, y_train)
+
+# Make predictions and evaluate the model
+train_predictions = svm_classifier.predict(X_train)
+test_predictions = svm_classifier.predict(X_test)
+
+train_accuracy = accuracy_score(y_train, train_predictions)
+test_accuracy = accuracy_score(y_test, test_predictions)
+
+print("Training accuracy:", train_accuracy)
+print("Testing accuracy:", test_accuracy)
+
+# Classify a new sample using the trained SVM model
+new_sample = [[5.0, 3.5, 1.5, 0.2]]  # Example feature values
+prediction = svm_classifier.predict(new_sample)
+print("Prediction for new sample:", iris.target_names[prediction[0]])
