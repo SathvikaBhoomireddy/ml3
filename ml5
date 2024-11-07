@@ -1,0 +1,92 @@
+# Import necessary libraries
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier, plot_tree
+from sklearn.metrics import accuracy_score
+
+# Step 1: Perform EDA
+# Load dataset
+iris = load_iris()
+df = pd.DataFrame(data=iris.data, columns=iris.feature_names)
+df['species'] = iris.target
+df['species'] = df['species'].map({0: 'setosa', 1: 'versicolor', 2: 'virginica'})
+
+# Display dataset information
+print("Dataset Information:")
+print(df.info())
+print("\nFirst five rows of the dataset:")
+print(df.head())
+print("\nMissing values in each column:")
+print(df.isnull().sum())
+print("\nStatistical summary of the dataset:")
+print(df.describe())
+
+# Visualize pairplot for feature relationships
+sns.pairplot(df, hue='species', markers=["o", "s", "D"])
+plt.suptitle("Pairplot of Iris Dataset", y=1.02)
+plt.show()
+
+# Correlation heatmap
+plt.figure(figsize=(8, 6))
+sns.heatmap(df.corr(), annot=True, cmap='coolwarm', linewidths=0.5)
+plt.title("Correlation Heatmap")
+plt.show()
+
+# Step 2: Implement CART Algorithm for Decision Tree Learning
+# Separate features and target variable
+X = iris.data
+y = iris.target
+
+# Split dataset into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Train an unpruned decision tree model
+clf = DecisionTreeClassifier(random_state=42)
+clf.fit(X_train, y_train)
+
+# Evaluate model performance
+train_pred = clf.predict(X_train)
+test_pred = clf.predict(X_test)
+train_accuracy = accuracy_score(y_train, train_pred)
+test_accuracy = accuracy_score(y_test, test_pred)
+
+print("Training accuracy (unpruned):", train_accuracy)
+print("Testing accuracy (unpruned):", test_accuracy)
+
+# Visualize the unpruned decision tree
+plt.figure(figsize=(15, 10))
+plot_tree(clf, feature_names=iris.feature_names, class_names=iris.target_names, filled=True)
+plt.title("Unpruned Decision Tree")
+plt.show()
+
+# Step 3: Classify a New Sample
+# Define a new sample with sepal length, sepal width, petal length, and petal width
+new_sample = [[5.0, 3.5, 1.5, 0.2]]
+
+# Predict the class of the new sample
+prediction = clf.predict(new_sample)
+print("Prediction for new sample:", iris.target_names[prediction[0]])
+
+# Step 4: Address Overfitting with Pruning
+# Implement a pruned decision tree by setting max_depth
+pruned_clf = DecisionTreeClassifier(max_depth=3, random_state=42)
+pruned_clf.fit(X_train, y_train)
+
+# Evaluate pruned model performance
+pruned_train_pred = pruned_clf.predict(X_train)
+pruned_test_pred = pruned_clf.predict(X_test)
+pruned_train_accuracy = accuracy_score(y_train, pruned_train_pred)
+pruned_test_accuracy = accuracy_score(y_test, pruned_test_pred)
+
+print("Training accuracy (pruned):", pruned_train_accuracy)
+print("Testing accuracy (pruned):", pruned_test_accuracy)
+
+# Visualize the pruned decision tree
+plt.figure(figsize=(15, 10))
+plot_tree(pruned_clf, feature_names=iris.feature_names, class_names=iris.target_names, filled=True)
+plt.title("Pruned Decision Tree (max_depth=3)")
+plt.show()
