@@ -1,0 +1,48 @@
+# Import libraries
+import pandas as pd
+import numpy as np
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report
+from sklearn.model_selection import train_test_split
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense
+
+# Load and explore data
+sensor_data = pd.read_csv('sensor_data.csv')
+maintenance_logs = pd.read_csv('maintenance_logs.csv')
+failure_data = pd.read_csv('failure_data.csv')
+
+# Feature Engineering
+# Creating time-based features, sensor aggregates, etc.
+sensor_data['sensor_mean'] = sensor_data['sensor_reading'].rolling(window=10).mean()
+sensor_data['sensor_std'] = sensor_data['sensor_reading'].rolling(window=10).std()
+sensor_data['time_to_failure'] = (failure_data['failure_timestamp'] - sensor_data['timestamp']).dt.total_seconds()
+
+# Labeling data based on proximity to failures
+sensor_data['label'] = sensor_data['time_to_failure'] < threshold_time
+
+# Train-test split
+X = sensor_data[['sensor_mean', 'sensor_std', ...]]  # Include engineered features
+y = sensor_data['label']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=False)
+
+# Random Forest Model (as an example)
+rf_model = RandomForestClassifier()
+rf_model.fit(X_train, y_train)
+y_pred_rf = rf_model.predict(X_test)
+print(classification_report(y_test, y_pred_rf))
+
+# LSTM Model for Time-Series (if using sequential data)
+X_train_series = X_train.values.reshape((X_train.shape[0], 1, X_train.shape[1]))  # Reshape for LSTM
+X_test_series = X_test.values.reshape((X_test.shape[0], 1, X_test.shape[1]))
+
+lstm_model = Sequential([
+    LSTM(50, activation='relu', input_shape=(X_train_series.shape[1], X_train_series.shape[2])),
+    Dense(1, activation='sigmoid')
+])
+lstm_model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+lstm_model.fit(X_train_series, y_train, epochs=10, validation_data=(X_test_series, y_test))
+
+# Evaluation on test set
+y_pred_lstm = (lstm_model.predict(X_test_series) > 0.5).astype("int32")
+print(classification_report(y_test, y_pred_lstm))
