@@ -1,0 +1,47 @@
+# Import necessary libraries
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from tensorflow.keras.utils import to_categorical
+
+# Load the Wheat Seed dataset
+url = "https://archive.ics.uci.edu/ml/machine-learning-databases/00236/seeds_dataset.txt"
+column_names = ['area', 'perimeter', 'compactness', 'length', 'width', 'asymmetry_coef', 'groove_length', 'class']
+data = pd.read_csv(url, delim_whitespace=True, names=column_names)
+
+# Separate features and labels
+X = data.drop(columns='class')
+y = data['class']
+
+# Encode the labels (class labels as integers)
+label_encoder = LabelEncoder()
+y = label_encoder.fit_transform(y)
+y = to_categorical(y)  # Convert to one-hot encoding
+
+# Split data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Standardize the features for better convergence
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Build the neural network model
+model = Sequential([
+    Dense(16, activation='relu', input_shape=(X_train.shape[1],)),  # Input layer with 16 neurons
+    Dense(8, activation='relu'),                                    # Hidden layer with 8 neurons
+    Dense(3, activation='softmax')                                  # Output layer with 3 neurons (for 3 classes)
+])
+
+# Compile the model using categorical cross-entropy loss and backpropagation
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+# Train the model
+model.fit(X_train, y_train, epochs=50, batch_size=5, validation_data=(X_test, y_test))
+
+# Evaluate the model on the test set
+test_loss, test_accuracy = model.evaluate(X_test, y_test)
+print(f"\nTest accuracy: {test_accuracy:.4f}")
